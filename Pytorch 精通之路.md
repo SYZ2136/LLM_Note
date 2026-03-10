@@ -30,6 +30,17 @@ Python 中一切皆对象，都能用 `type()` 得到它的类型，`return` 可
 ---
 
 
+# 逻辑运算优先级
+
+不额外加括号的情况下，优先级有
+```
+not  >  and  >  or
+```
+
+
+---
+
+
 
 # 多目标赋值
 
@@ -46,6 +57,12 @@ Python 中一切皆对象，都能用 `type()` 得到它的类型，`return` 可
 上面式子 `nums[nums[i] - 1]` 依赖于 `nums[i]`, 
 如果写成 `nums[i], nums[nums[i] - 1] = nums[nums[i] - 1], nums[i]`，那么`nums[i]` 直接先发生改变了
 
+```
+x = 1, 2, 3  # x 打印出来就是 (1, 2, 3), 类型为元组
+
+# 下面的迭代也是，右侧的四个二元组整体这样逗号式子本身就会自动打包成元组，所有不用额外外侧再加一个括号
+for i, j in (x - 1, y), (x + 1, y), (x, y - 1), (x, y + 1):
+```
 
 
 ---
@@ -119,6 +136,7 @@ m = Male(18, "Tom")
 
 
 # set 语法
+
 `set` 是 Python 的一种内置容器类型，表示“**不重复元素的集合**”
 `set` 是一个“只存 key 的哈希表结构”，只关心元素是否存在。
 集合 set 是一个特殊的字典（只存 key，不存 value），其底层实现是一个哈希表
@@ -157,15 +175,17 @@ print(s)  # {1, 2, 3, 4}
 
 # 删除
 s = {1, 2, 3}
-s.remove(2)   # {1, 3}
-s.discard(5)  # 不存在也不会报错
+s.remove(2)   # 原地操作，返回值为None，{1, 3}
+s.discard(5)  # 原地操作，返回值为None,不存在也不会报错
+t = s - {1}  # t 为{2, 3}, s 还是 {1, 2, 3}
+# python 中大部分原地操作的方法返回值都是 None，目的就是提示这个方法是原地修改原对象，而不是生成一个新对象
 
 # 判断是否在集合里，很快，平均 O(1)
 s = {1, 2, 3}
 print(2 in s)      # True 
 print(5 not in s)  # True
 
-# 集合运算
+# 以下这些集合运算都是非原地，原集合 a,b 本身都不变，返回新集合
 a = {1, 2, 3}
 b = {3, 4, 5}
 # 并集, 以下每组中两种写法等价
@@ -182,7 +202,7 @@ a ^ b
 a.symmetric_difference(b)
 ```
 
-# list语法
+# list 语法
 
 
 增删改查
@@ -192,16 +212,42 @@ lst = [1, 2]
 lst.append(3)      # [1, 2, 3]
 lst.append([4, 5]) # [1, 2, 3, [4, 5]]
 
+# 删除
+lst = [1, 2, 3, 4]
+a = lst.pop()  # 默认删除最后一个， a 结果为 4， lst 变为 [1, 2, 3]
+lst = [5, 6, 7, 8]
+b = lst.pop(2)  # 删除索引为 2 的元素
+
+print(a)    # 3
+print(lst)  # [1, 2, 4]
+
+
+print(a)    # 3
+print(lst)  # [1, 2, 4]
+
+
+
+# 拷贝
+list.copy()  # 无参数，拷贝一份副本； list， set， dict 都支持 .copy() 方法
+
+
+
+s = "ab" * 3        # "ababab"
+t = (0,) * 4        # (0, 0, 0, 0), "(0)"只是一个加了括号的表达式，再加一个comma才能被识别为元组
+b = [0] * 10        # [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+
+
+# 返回 list 中某个数值的索引
+list = [10, 20, 30, 40]
+list.index(30)  # 2
+
+
 # extend() 把一个可迭代对象一个个加到尾部
 lst = [1, 2]
 lst.extend([3, 4])   # [1, 2, 3, 4]
 lst.extend("ab")     # [1, 2, 3, 4, 'a', 'b']
 d = {"a": 10, "b": 20}
 lst.extend(d)  # 字典默认迭代键
-
-s = "ab" * 3        # "ababab"
-t = (0,) * 4        # (0, 0, 0, 0), "(0)"只是一个加了括号的表达式，再加一个comma才能被识别为
-b = [0] * 10        # [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 ```
 
 list 中的元素可以是任意类型，也可以是自己定义的类
@@ -258,10 +304,12 @@ b = {x: len(x) for x in a}
 
 # "".join
 
-`str.join(iterable)`
-只有字符串对象可以 `.join`，且拼接的对象也只能是字符串
+`str.join(iterable)` 表示用 str 作为分隔符，把可迭代对象中的每个元素连起来
+只有字符串对象可以 `.join`，且传入的对象也只能是字符串
 
 ```
+"12".join("abc")  # 结果为'a12b12c'
+
 # 第一种，for 的迭代器语法
 ''.join(['1', '2', '3'])  # "123"
 c = ''.join(str(x) for x in a)
@@ -305,6 +353,7 @@ for x in map(int, nums):
 ```
 a = [0,1,2,3,4,5,6,7,8,9]
 
+# 头或尾省略表示包含，a[6:] 包含尾，a[:4] 包含头，a[:] 全序列头尾都包含
 a[2:6]      # 左闭右开，a[2]到a[6]，这种切片都是拷贝
 a[:4]       # 包含开头到索引4，右开
 a[6:]       # 左闭，到结尾，包含结尾
@@ -554,7 +603,69 @@ finally:
 ```
 
 
+---
 
+
+# `__slots__ = ('son', 'end')` 
+
+不写 slots，实例化之后还可以单独加属性
+```
+class Node:
+    def __init__(self):
+        self.son = {}
+        self.end = False
+
+a = Node()
+b = Node()
+
+a.x = 1
+a.__dict__ 结果为 {'son': {}, 'end': False, 'x': 1}
+b.__dict__ 不受影响
+```
+
+
+slots 意为 槽位，写了之后就限制这个类只能有这两个属性，出现其他的就会报错
+
+例1：
+```python
+class Node:
+    __slots__ = ('son', 'end')
+
+    def __init__(self):
+        self.son = {}
+        self.edn = False
+
+a = Node()  # 实例化的时候就会自动执行 __init__, 报错 'Node' object has no attribute 'edn'
+```
+
+例2：
+```python
+class Node:
+    __slots__ = ('son', 'end')
+
+    def __init__(self):
+        self.son = {}
+        self.end = False
+
+    def mark_end(self):
+        self.x = True   
+
+a = Node()  # 正常执行
+a.mark_end()  # 报错
+```
+
+例3：
+```python
+class Node:
+    __slots__ = ('son', 'end')
+
+    def __init__(self):
+        self.son = {}
+        self.end = False  
+
+a = Node()
+a.x = 1  # 报错
+```
 
 ---
 
@@ -575,8 +686,10 @@ B：Builtins（内置）
 
 因此下面这段代码中，由于不存在赋值，按照 LEGB 的顺序，能够访问到函数外的 ans
 
-```class Solution: 
+```python
+class Solution: 
  def postorderTraversal(self, root: Optional[TreeNode]) -> List[int]:
+     ans = []
      def dfs(root: Optional[TreeNode]):
          if not root:
              return
@@ -584,13 +697,13 @@ B：Builtins（内置）
          dfs(root.right)
          ans.append(root.val)
 
-     ans = []
      dfs(root)
      return ans
 ```
 
+
 而下面这段代码由于出现了赋值 `ans = max(ans, left + right)`, 因此要声明 `nonlocal ans`, 否则就会被当成函数内部临时创建的 local 变量
-```
+```python
 class Solution:
     def diameterOfBinaryTree(self, root: Optional[TreeNode]) -> int:
 
@@ -602,9 +715,35 @@ class Solution:
             right = dfs(root.right)
             ans = max(ans, left + right)
             return max(left, right) + 1
-
+        # 不要求外层中 ans 一定在 内层函数的前面，不过一般还是习惯写在前面
         ans = 0
         dfs(root)
+        return ans
+```
+
+
+下面这种 grid 作为外层函数传入的参数，也是可以在内层中首次用到 grid 之前写上 nonlocal;
+不过下面这种函数内部只是改变 grid 其中元素的值，grid 本身的 name binding 没有变，下面这个不写 nonlocal 
+```python
+class Solution:
+    def numIslands(self, grid: List[List[str]]) -> int:
+        m, n = len(grid), len(grid[0])
+
+        def dfs(i: int, j: int) -> None:
+            if i < 0 or i >= m or j < 0 or j >= n or grid[i][j] != "1":
+                return
+            grid[i][j] = "2"
+            dfs(i, j - 1)
+            dfs(i, j + 1)
+            dfs(i - 1, j)
+            dfs(i + 1, j)
+
+        ans = 0
+        for i, row in enumerate(grid):
+            for k, e in enumerate(row):
+                if grid[i][k] == "1":
+                    ans += 1
+                    dfs(i, k)
         return ans
 ```
 
@@ -622,6 +761,19 @@ f()
 ```
 
 这里如果写 nonlocal x 就会报错  `no binding for nonlocal 'x' found`
+
+```
+x = 10
+
+class A:
+    def f(self):
+        global x
+        x += 1
+
+a = A()
+a.f()
+```
+这里不写 global 报错 `local variable 'x' referenced before assignment`
 
 
 #### 类中定义的方法涉及的外层变量情况
@@ -676,6 +828,13 @@ class Solution:
             and self.isValidBST(root.left, left, x)
             and self.isValidBST(root.right, x, right)
         )
+```
+
+```python
+MAPPING = [
+    "", "", "abc", "def", "ghi",
+    "jkl", "mno", "pqrs", "tuv", "wxyz"
+]
 ```
 
 
@@ -913,7 +1072,7 @@ a = [3,1,2]
 a.sort()      # 原地
 a.reverse()   # 原地
 ```
-`pytorch` 中函数名后面有`_` 的，一般是原地操作
+`pytorch` 中函数名后面有`_` 的，一般是原地操作 （ pytorch 自己的方法命名风格）
 ```
 x.relu_()        # 原地 ReLU
 x.zero_()        # 原地清零
@@ -1018,6 +1177,34 @@ range(start, stop, step)  # step=-1表示每次减1
 for i in range(5)  # 0,1,2,3,4 从零开始，左闭右开
 for i in range(1,5)  # 从1开始到5，左闭右开
 for i in range(4, -3, -1):  # 从4开始，走到-3，左闭右开，每次减1；结果为[4, 3, 2, 1, 0, -1, -2]，同样是左闭右开
+```
+
+
+
+
+---
+
+# enumerate
+
+`enumerate(iterable, start=0)` 索引从 start 的传入值开始
+迭代时同时拿到 "编号" 和 "元素"
+
+```python
+list = ['a', 'b', 'c']
+for i, x in enumerate(list):
+    print(i, x)
+结果为 
+0 a
+1 b
+2 c
+
+list = ['a', 'b', 'c']
+for i, x in enumerate(list，start = 9):
+    print(i, x)
+结果为
+9 a
+10 b
+11 c
 ```
 
 
