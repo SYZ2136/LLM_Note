@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "强化学习 (Reinforcement Learning).md",
-                "mode": "source",
+                "file": "Information Theroy.md",
+                "mode": "preview",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "强化学习 (Reinforcement Learning)"
+              "title": "Information Theroy"
             }
           },
           {
@@ -28,7 +28,7 @@
               "type": "markdown",
               "state": {
                 "file": "Pytorch 精通之路.md",
-                "mode": "preview",
+                "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
@@ -185,17 +185,17 @@
   },
   "active": "2717547e4c873e03",
   "lastOpenFiles": [
+    "Agentic RL.md",
+    "Information Theroy.md",
+    "力扣 hot100.md",
     "Pytorch 精通之路.md",
     "强化学习 (Reinforcement Learning).md",
-    "RLHF +PPO.md",
-    "力扣 hot100.md",
     "Transformer 架构.md",
     "Untitled.md",
     "Pasted image 20260306234423.png",
     "Pasted image 20260306234025.png",
     "git 与 操作系统.md",
     "Spoken English.md",
-    "Information Theroy.md",
     "Pasted image 20260304162352.png",
     "课题组网站制作 log.md",
     "Prompt.md",

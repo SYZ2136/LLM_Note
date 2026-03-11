@@ -37,6 +37,20 @@ Python 中一切皆对象，都能用 `type()` 得到它的类型，`return` 可
 not  >  and  >  or
 ```
 
+---
+
+# and 和 or 是短路求值
+
+
+`A or B`, 如果 A 真，B 直接就不看了，压根不会读取执行
+`A and B`, 如果 A 为 假， 同样 B 直接不看了
+
+```python
+if start == len(nums) or nums[start] != target:  # 力扣 34
+# 这里的两个条件不能换序，因为前一个条件为真后半部分不看不执行，这样就避免了数组索引超出的报错，只有前面为假，才读后面，此时后面条件也合法了
+```
+
+
 
 ---
 
@@ -494,6 +508,38 @@ d["y"].append(42)
 传入一个“可迭代对象”（列表、生成器、集合、字符串、range 等）,逐个取元素，只要有一个元素为 False，就返回 False
 
 `all([True, False, True])  # False`
+
+
+
+---
+
+
+# if 和 elif
+
+连续写多个 if， 每个 if 都会各自独立判断
+
+```
+x = 5
+if x > 0:
+    print("正数")
+if x > 3:
+    print("大于 3")
+if x < 10:
+    print("小于 10")
+```
+
+
+`if / elif / elif` 是互斥分支，某个符合后面的不再执行，换句话说只可能执行其中的一个条件
+```
+x = 5
+if x > 0:
+    print("正数")
+elif x > 3:
+    print("大于 3")
+elif x < 10:
+    print("小于 10")
+```
+
 
 
 
