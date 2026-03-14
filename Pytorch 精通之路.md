@@ -81,7 +81,10 @@ for i, j in (x - 1, y), (x + 1, y), (x, y - 1), (x, y + 1):
 
 ---
 
-# self
+
+# self 和 实例属性
+
+#### self
 
 **self就是一个未来实例的“代称”，实例化之后，self就是实例对象本身**，
 self 服务于实例属性和实例方法的东西 (有类属性和实例属性两种东西)
@@ -110,6 +113,34 @@ model.print_self_info()
 确实验证了：实例化之后，self就是实例对象本身；
 并且，类的定义的过程是一个蓝图，在这个过程中，既然self是未来实例对象的代称，那么在蓝图里面self.method()自然是可行的，因为反正是蓝图，真调用说明已经实例化了，那都已经实例化了self就是实例化对象，当然能够调用相应方法
 
+
+#### 类的属性
+
+实例属性定义之后，实例化之后仍然可以被修改、添加
+```
+class Counter:
+    def __init__(self):
+        self.count = 0   # 给当前对象一个属性 count
+
+    def add_one(self):
+        self.count = self.count + 1
+        
+c = Counter()        
+c.count  # 0
+c.add_one()
+c.count  # 1
+
+class Person:
+    def __init__(self, name):
+        self.name = name
+
+    def set_age(self, age):
+        self.age = age
+a = Person("Tom")
+a.__dict__  # {'name': 'Tom'}
+a.set_age(18)
+a.__dict__  # {'name': 'Tom', 'age': 18}
+```
 
 
 ----
@@ -147,6 +178,63 @@ m = Male(18, "Tom")
 ---
 
 
+# 装饰器
+
+函数装饰器本质上就是**一个接收函数作为参数，并返回一个新函数的函数**
+```
+# 这里定义一个装饰器，比如传入 hello() 函数，实现头尾多打印两句
+def decorator(func):
+    def wrapper():
+        print("开始执行")
+        func()
+        print("执行结束")
+    return wrapper
+
+def hello():
+    print("hello")
+hello = decorator(hello)
+hello()
+```
+python 提供更简洁的写法：`@装饰器` 紧贴着写在目标函数上一行；所以装饰器在目标函数定义时就执行了；比如这里 `def hello` 时上面加个装饰器，就等价于 `hello = decorator(hello)`
+```
+def decorator(func):
+    def wrapper():
+        print("开始执行")
+        func()
+        print("执行结束")
+    return wrapper
+
+@decorator
+def hello():
+    print("hello")
+hello()
+```
+
+#### `@cache`
+本质上就是一个字典，修饰的目标函数的参数作为键，返回值作为值；
+因为修饰函数的参数作为键写入字典，**所以修饰的函数必须是可哈希的**，`list,dict,set` 这类就不能作为函数参数，多组参数组合成 `tuple` 作为键
+
+第一次碰到，看看字典键里有没有这一组参数，如果没有，就执行函数，然后存入字典，如果有，就直接查找字典，得到这组参数值下的函数返回值
+
+#### `@staticmethod`
+
+普通实例方法不传入 self 的情况：
+```
+class MathTool:
+    def add(a, b):
+        return a + b
+```
+此时`MathTool.add(1, 2)` 合法;
+`m = MathTool()` 然后 `m.add(1, 2)`  不合法，因为 Python 会自动把 m 当成第一个参数传进去，等价于 `MathTool.add(m, 1, 2)`，定义的时候写了两个参数，传入三个参数，自然不合法
+
+写成静态方法就合法了：
+```
+class MathTool:
+    @staticmethod
+    def add(a, b):
+        return a + b
+```
+加了 `@staticmethod` 不会自动绑定 `self`,此时`MathTool.add(1, 2)` 和 `m = MathTool()` 然后 `m.add(1, 2)` 都合法
 
 
 # set 语法
@@ -179,7 +267,8 @@ for _ in set  # 迭代顺序由hash表内部布局决定
 ###### 增删改查
 ```
 s = {1, 2}
-s.add(3)  # 增加一个元素
+
+s.add(3)  # 增加一个元素, 如果添加的元素已经在 set 里，就什么都不发生
 print(s)  # {1, 2, 3}
 
 # 批量加入用update
@@ -221,12 +310,25 @@ a.symmetric_difference(b)
 
 增删改查
 ```
-# append() 尾部添加一个元素
+# 增
 lst = [1, 2]
-lst.append(3)      # [1, 2, 3]
+lst.append(3)      # append() 是尾部添加一个元素， [1, 2, 3]
 lst.append([4, 5]) # [1, 2, 3, [4, 5]]
 
-# 删除
+lst = [1, 2]  # extend() 把一个可迭代对象一个个加到尾部
+lst.extend([3, 4])   # [1, 2, 3, 4]
+lst.extend("ab")     # [1, 2, 3, 4, 'a', 'b']
+d = {"a": 10, "b": 20}
+lst.extend(d)  # 字典默认迭代键
+
+a = [1, 2]
+b = a
+# a += b → 调用 a.__iadd__(b)，原地加
+# a + b → 调用 a.__add__(b)，普通加，产生新对象
+a += [3, 4]  # += 是原地操作，id(a) == id(b)，变为 [1, 2, 3, 4]，相当于 .extend()
+a = a + [6 ,7]  # 直接加再赋值是非原地，此时 id(a) ≠ id(b)
+
+# 删
 lst = [1, 2, 3, 4]
 a = lst.pop()  # 默认删除最后一个， a 结果为 4， lst 变为 [1, 2, 3]
 lst = [5, 6, 7, 8]
@@ -254,14 +356,6 @@ b = [0] * 10        # [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 # 返回 list 中某个数值的索引
 list = [10, 20, 30, 40]
 list.index(30)  # 2
-
-
-# extend() 把一个可迭代对象一个个加到尾部
-lst = [1, 2]
-lst.extend([3, 4])   # [1, 2, 3, 4]
-lst.extend("ab")     # [1, 2, 3, 4, 'a', 'b']
-d = {"a": 10, "b": 20}
-lst.extend(d)  # 字典默认迭代键
 ```
 
 list 中的元素可以是任意类型，也可以是自己定义的类
@@ -328,11 +422,32 @@ b = {x: len(x) for x in a}
 ''.join(['1', '2', '3'])  # "123"
 c = ''.join(str(x) for x in a)
 
-# 第二种，惰性迭代器对象 map；注意助理 reversed(a) 返回的是一个 list_reverseiterator 对象
+# 第二种，惰性迭代器对象 map；注意 reversed(a) 返回的是一个 list_reverseiterator 对象
 a = [1, 2, 3]
 c = "".join(map(str, reversed(a)))  # '321'
 ```
 
+
+
+---
+
+
+# reversed()
+
+惰性迭代器
+`reversed(dict)` 反的是字典创建时的插入顺序
+```
+d = {'a': 1, 'b': 2, 'c': 3}
+print(list(d))           # ['a', 'b', 'c']
+print(list(reversed(d))) # ['c', 'b', 'a']
+
+
+buckets = {}  
+buckets[2] = ['a']  
+buckets[1] = ['b']  
+buckets[3] = ['c']
+list(reversed(buckets))  # [3, 1, 2]
+```
 
 ---
 
@@ -451,6 +566,51 @@ last = d[-1]      # 3
 ---
 
 
+# Counter()
+
+`Counter` 本质上是一个**计数器字典**
+`Counter` 本质上是 `dict` 的子类，它的迭代顺序就是键值对的插入顺序。
+
+```
+cnt = Counter()
+cnt["a"]  # 查找不存在的键的时候，返回 0，但是 cnt 本身不会加这个键值对，这里还是 Counter()
+
+cnt["a"] += 1  # 这样有次数了，cnt 就变成了Counter({'a': 1})
+
+cnt = Counter(iterable)  # 比如 list，tuple，dict, str 等
+cnt = Counter(["a", 1, 2, 3, 3, 3])  # Counter({3: 3, 'a': 1, 1: 1, 2: 1})
+cnt = Counter(a=3, b=2)  # 按关键字传入，键当成字符串，Counter({'a': 3, 'b': 2})
+
+# 传入字典是直接 mapping 成对应字典，而不是迭代键
+cnt = Counter({'a': 3, 'b': 2})  # Counter({'a': 3, 'b': 2})
+
+
+# 元素高频到低频
+cnt = Counter("abacaba")
+c = cnt.most_common()  # [('a', 4), ('b', 2), ('c', 1)]，即返回一个 list
+# 取前 k 个高频元素
+cnt = Counter("abacaba")
+c = cnt.most_common(2)  #返回 [('a', 4), ('b', 2)] 这个 list
+
+
+# 加减统计元素
+cnt = Counter("aab")
+cnt.update("bcc")  # cnt 变为 Counter({'a': 2, 'b': 2, 'c': 2})
+cnt = Counter("aabcc")
+cnt.subtract("abc")  # cnt 变为 Counter({'a': 1, 'c': 1, 'b': 0})
+
+# Counter 计数过程无排序
+nums = [5, 5, 2, 2, 2, 9]
+cnt = Counter(nums)  # Counter({2: 3, 5: 2, 9: 1})，打印出来只是看上去次数总是降序
+list(cnt.items())    # [(5, 2), (2, 3), (9, 1)]，真实迭代是按照字典创建的插入顺序
+```
+
+
+
+---
+
+
+
 # dict 和 defaultdict 语法
 
 #### dict
@@ -471,6 +631,10 @@ d = dict(a=1, b=2)  # 只适用于 key 为字符串且变量名合法的情况
 d = {"a": 1}
 d.update({"b": 2, "a": 10})  # -> {"a": 10, "b": 2}
 d.update(c=3, d=4)  # -> {"a": 10, "b": 2, "c": 3, "d": 4}
+
+# 判断键或值在不在字典里
+x in d  # 查键，O(1)
+x in d.values()  # 查值，O(n),因为值没有建立哈希表索引，要一个一个找
 ```
 `dict.get()` 是 `dict` 的内置方法，如果键存在，就返回键值，如果键不存在，则返回 default
 ```
@@ -482,8 +646,6 @@ counts.get("a", 0)  # 返回 2
 counts.get("c", 0)  # 返回 default=0
 ```
 
-
----
 
 #### defaultdict
 `defaultdict` 是一个带默认值的特殊的 `dict` 

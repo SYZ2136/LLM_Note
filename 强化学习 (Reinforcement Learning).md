@@ -646,12 +646,6 @@ Sarsa 算法的 policy evaluation 和 policy improvement 过程见 p135
 ---
 
 
-![[Pasted image 20260304162352.png]]
-
-
----
-
-
 $$
 \begin{aligned}
 G_t^{(1)} &= R_{t+1} + \gamma\, q_{\pi}(S_{t+1}, A_{t+1}) 
@@ -668,7 +662,7 @@ G_t^{(\infty)} &= R_{t+1} + \gamma R_{t+2} + \gamma^{2} R_{t+3} + \gamma^{3} R_{
 $$
 $q_{\pi}(S_{t+1}, A_{t+1})$ 中的大写 $S_{t+1}, A_{t+1}$ 表示随机变量的某次采样，只是还没采样得到具体数值，但是代表的是某个采样的数值
 
-discounted return** is: $G_t = R_{t+1} + \gamma R_{t+2} + \gamma^2 R_{t+3} + \ldots$
+**discounted return** is: $G_t = R_{t+1} + \gamma R_{t+2} + \gamma^2 R_{t+3} + \ldots$
 这里 $G_t^{(1)} \neq G_t$  , 二者在条件期望的意义下相等(该结论对 1-step 到 $\infty$-step 都成立)，证明如下：
 $$q_{\pi}(s,a)=\mathbb{E}_{\pi}\!\left[\,R_{t+1}+\gamma G_{t+1}\mid S_t=s,\;A_t=a\,\right]$$
 $$
@@ -1062,8 +1056,21 @@ At time step $t$ in each episode, do
 
 Generate $a_t$ following $\pi(a\mid s_t,\theta_t)$, observe $r_{t+1}, s_{t+1}$, and then generate $a_{t+1}$ following $\pi(a\mid s_{t+1},\theta_t)$.  说白了就是拿到 Sarsa 所需的 $(s_t,a_t,r_{t+1},s_{t+1},a_{t+1})$ 
 
-**Critic (value update):** (其实就是 Sarsa 结合 value function approximation)
-critic 学的是 action value 或者 state value， 其参数 $w$ 的更新基于最小化$\bigl(y_T-\hat{q}(s,a,w)\bigr)^2$ 把原本需要 main net 和 target net 延迟更新的 $y_T$ 换成 TD-target，然后梯度下降；
+**Critic (value update):** 
+critic model 通用的是：学的是 action value 或者 state value，以 $q$ 为例， 其参数 $w$ 的更新基于最小化$\bigl(y_T-\hat{q}(s,a,w)\bigr)^2$ ，$\hat{q}(s,a,w)$ 是 critic model 输出的估计值，不同问题不同算法区别就是这个 $y_T$ 如何获得；对于有固定显式的 reward 的问题，比如简单的九宫格问题，往上往下到达目的地到达陷阱这一类的，每次行动固定就有了一个天然写死的 reward；如果没有天然显式的 reward，我们还需要额外的 reward model 来获得相关的 reward，比如 RLHF 中训练一个 reward model；
+
+在各种工程中，确定 $y_T$，只要找到一个与想学习的 action value 一致的数值就行，训练过程其实就是把 actic model 的预测值往这个我们认为合理的数值上拉而已；
+
+下面是 QAC 算法 中的做法，
+首先之前 DQL 俩 network
+- One is a **main network** representing $\hat{q}(s,a,w)$.
+- The other is a **target network** $\hat{q}(s,a,w_T)$.
+The objective function in this case degenerates to
+$$
+J=\mathbb{E}\!\left[\left(R+\gamma\max_{a\in\mathcal{A}(S')}\hat{q}(S',a,w_T)-\hat{q}(S,A,w)\right)^2\right].
+$$
+
+把原本需要 main net 和 target net 延迟更新的 $y_T$ 换成 有点类似 TD-target 的结构，然后用模型预测值去代替 q 的采样值，这样其实只有 $r_{t+1}$ 是真实的采样值，有点像 bootstrap 的感觉，QAC 对替换后的 J 求梯度，更新式子为
 $$
 w_{t+1}
 =
@@ -1282,22 +1289,3 @@ $$
 ---
 
 
-# PPO 
-
-policy gradient 两种等价写法：
-$$
-\nabla_{\theta}J(\theta) =\mathbb{E}_{(S_t, A_t)\sim d_{\pi_\theta}(s)\,\pi_\theta(a\mid s)}\!\left[\nabla_{\theta}\ln \pi(A\mid S,\theta)\,q_{\pi}(S,A)\right]
-$$
-
-和
-$$
-\nabla_\theta J(\theta)=\mathbb{E}_{\tau \sim P_\theta(\tau)}\left[\nabla_\theta \log \pi_\theta(a_t\mid s_t),R(\tau)\right]
-$$
-其中 $\tau$ 表示一条轨迹，$R(\tau)$ 表示这条轨迹的 reward
-
-这俩等价也不用啥数学推导，第一个式子里面是一个二元随机变量，A 取不同值就囊括了该状态下所有可能的 trajectory
-
-
-
-
----
